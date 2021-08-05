@@ -23,10 +23,14 @@ export const isWindowsOpenSSHAvailable = memoizeOne(
  */
 export async function getSSHArguments() {
   const canUseWindowsSSH = await isWindowsOpenSSHAvailable()
-  if (!canUseWindowsSSH || !getBoolean(UseWindowsOpenSSHKey, false)) {
-    return []
+  if (canUseWindowsSSH && getBoolean(UseWindowsOpenSSHKey, false)) {
+    // Replace git sshCommand with Windows' OpenSSH executable path
+    return ['-c', `core.sshCommand="${WindowsOpenSSHPath}"`]
   }
 
-  // Replace git sshCommand with Windows' OpenSSH executable path
-  return ['-c', `core.sshCommand="${WindowsOpenSSHPath}"`]
+  if (__DARWIN__) {
+    return ['-c', `core.sshCommand="/path/to/ssh-wrapper"`]
+  }
+
+  return []
 }
